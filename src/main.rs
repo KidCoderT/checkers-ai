@@ -51,18 +51,19 @@ fn draw_board() {
     }
 }
 
-fn draw_scaled_img(img: Texture2D, x: f32, y: f32, scale: f32) {
+fn draw_scaled_img(img: Texture2D, x: f32, y: f32, scale: f32, should_center: bool) {
     let img_data = img.get_texture_data();
 
     let scaled_width = scale * (img_data.width() as f32);
     let scaled_height = scale * (img_data.height() as f32);
 
-    // let color = 
+    let offset_x = if should_center {scaled_width / 2f32} else {0.0};
+    let offset_y = if should_center {scaled_height / 2f32} else {0.0};
 
     draw_texture_ex(
         img,
-        x,
-        y,
+        x - offset_x,
+        y - offset_y,
         WHITE,
         DrawTextureParams {
             dest_size: Some(Vec2::new(scaled_width, scaled_height)),
@@ -71,7 +72,7 @@ fn draw_scaled_img(img: Texture2D, x: f32, y: f32, scale: f32) {
     )
 }
 
-fn draw_pieces(board: [board::Position; 64], resources: Resources) {
+fn draw_pieces(board: [board::Position; 64], resources: &Resources) {
     for index in 0..64 {
         let piece = board[index].contains;
 
@@ -80,10 +81,10 @@ fn draw_pieces(board: [board::Position; 64], resources: Resources) {
             _ => resources.pieces.get(&piece).unwrap(),
         };
 
-        let x: f32 = BOARD_OFFSET as f32 + CELL_SIZE as f32 * (index as f32 % 8.);
-        let y: f32 = BOARD_OFFSET as f32 + CELL_SIZE as f32 * (index as f32 / 8.);
+        let x: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
+        let y: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
 
-        draw_scaled_img(img.clone(), x, y, 0.4)
+        draw_scaled_img(img.clone(), x, y, 0.4, true)
     }
 }
 
@@ -96,7 +97,7 @@ async fn main() {
         clear_background(Color::from_rgba(254, 241, 208, 255));
         draw_texture(resources.background, 0f32, 0f32, WHITE);
         draw_board();
-        draw_pieces(manager.board, resources);
+        draw_pieces(manager.board, &resources);
 
         next_frame().await
     }
