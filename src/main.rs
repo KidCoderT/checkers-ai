@@ -94,7 +94,7 @@ async fn main() {
 
     loop {
         clear_background(Color::from_rgba(254, 241, 208, 255));
-        draw_texture(&resources.background, 0f32, 0f32, WHITE);
+        draw_texture(resources.background, 0f32, 0f32, WHITE);
         draw_board();
         draw_pieces(manager.board, resources);
 
