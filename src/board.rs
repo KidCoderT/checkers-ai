@@ -112,4 +112,9 @@ impl Manager {
         self.board[old_index as usize].contains = Piece::Empty;
         self.board[new_index as usize].contains = old_piece;
     }
+
+    pub fn delete_piece(&mut self, index: u8) {
+        if self.board[index as usize].contains == Piece::Empty {panic!("u cant delete an empty position")}
+        self.board[index as usize].contains = Piece::Empty;
+    }
 }

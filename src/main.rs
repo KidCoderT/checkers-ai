@@ -155,7 +155,8 @@ async fn main() {
                     let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
 
                     if manager.board[index as usize].contains == board::Piece::Empty {
-                        manager.move_piece(drag_index, index); // todo: update this
+                        // manager.move_piece(drag_index, index); // todo: update this
+                        manager.delete_piece(drag_index); // todo: update this
                     }
                 }
 
