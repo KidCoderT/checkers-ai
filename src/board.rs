@@ -9,7 +9,9 @@ pub enum GameState {
 pub enum Piece {
     Blue,
     Red,
-    Empty
+    BlueKing,
+    RedKind,
+    Empty,
 }
 
 pub struct Move {
@@ -24,7 +26,6 @@ pub struct Move {
 pub struct Position {
     pub index: u8,
     pub contains: Piece,
-    pub is_active: bool,
 }
 
 impl Position {
@@ -32,7 +33,6 @@ impl Position {
         Position {
             index: index,
             contains: Piece::Empty,
-            is_active: false
         }
     }
 
@@ -60,7 +60,7 @@ impl Manager {
             made_moves: Vec::new(),
             moves_without_kill: 0,
             side: Piece::Blue,
-            winner: Piece::Empty
+            winner: Piece::Empty,
         };
 
         manager.setup_pieces();
@@ -75,7 +75,9 @@ impl Manager {
             for j in 0..4 {
                 let index = {
                     let mut ans = (i * 8) + (j * 2);
-                    if is_even {ans += 1}
+                    if is_even {
+                        ans += 1
+                    }
 
                     ans
                 };
@@ -90,7 +92,9 @@ impl Manager {
             for j in 0..4 {
                 let index = {
                     let mut ans = (i * 8) + (j * 2);
-                    if is_even {ans += 1}
+                    if is_even {
+                        ans += 1
+                    }
 
                     ans
                 };
@@ -98,5 +102,14 @@ impl Manager {
                 self.board[index].contains = Piece::Blue
             }
         }
+    }
+
+    pub fn move_piece(&mut self, old_index: u8, new_index: u8) {
+        if self.board[old_index as usize].contains == Piece::Empty {panic!("the piece to move cannot be empty")}
+        if self.board[new_index as usize].contains != Piece::Empty {panic!("u cant move the piece to a filled location")}
+
+        let old_piece = self.board[old_index as usize].contains;
+        self.board[old_index as usize].contains = Piece::Empty;
+        self.board[new_index as usize].contains = old_piece;
     }
 }

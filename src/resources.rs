@@ -1,6 +1,6 @@
+use crate::board::Piece;
 use macroquad::prelude::*;
 use std::collections::HashMap;
-use crate::board::Piece;
 
 pub struct Resources {
     pub background: Texture2D,
@@ -19,7 +19,7 @@ pub async fn load_resources() -> Resources {
     let mut piece = load_texture("resources/blue.png").await.unwrap();
     pieces.insert(Piece::Blue, piece);
 
-    Resources { 
+    Resources {
         background,
         pieces,
         banners,
