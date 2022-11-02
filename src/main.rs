@@ -101,7 +101,12 @@ fn draw_pieces(board: &[board::Position; 64], active_index: &Option<u8>, resourc
         let x: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
         let y: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
 
-        draw_scaled_img(img.clone(), x, y, 0.4, true)
+        if piece == board::Piece::BlueKing || piece == board::Piece::RedKing {
+            draw_scaled_img(*img, x, y + 3f32, 0.4, true);
+            draw_scaled_img(*img, x, y - 3f32, 0.4, true);
+        } else {
+            draw_scaled_img(*img, x, y, 0.4, true);
+        }
     }
 }
 
@@ -156,7 +161,8 @@ async fn main() {
 
                     if manager.board[index as usize].contains == board::Piece::Empty {
                         // manager.move_piece(drag_index, index); // todo: update this
-                        manager.delete_piece(drag_index); // todo: update this
+                        // manager.delete_piece(drag_index); // todo: update this
+                        manager.king_piece(drag_index); // todo: update this
                     }
                 }
 

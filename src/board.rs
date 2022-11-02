@@ -10,7 +10,7 @@ pub enum Piece {
     Blue,
     Red,
     BlueKing,
-    RedKind,
+    RedKing,
     Empty,
 }
 
@@ -105,8 +105,12 @@ impl Manager {
     }
 
     pub fn move_piece(&mut self, old_index: u8, new_index: u8) {
-        if self.board[old_index as usize].contains == Piece::Empty {panic!("the piece to move cannot be empty")}
-        if self.board[new_index as usize].contains != Piece::Empty {panic!("u cant move the piece to a filled location")}
+        if self.board[old_index as usize].contains == Piece::Empty {
+            panic!("the piece to move cannot be empty")
+        }
+        if self.board[new_index as usize].contains != Piece::Empty {
+            panic!("u cant move the piece to a filled location")
+        }
 
         let old_piece = self.board[old_index as usize].contains;
         self.board[old_index as usize].contains = Piece::Empty;
@@ -114,7 +118,26 @@ impl Manager {
     }
 
     pub fn delete_piece(&mut self, index: u8) {
-        if self.board[index as usize].contains == Piece::Empty {panic!("u cant delete an empty position")}
+        if self.board[index as usize].contains == Piece::Empty {
+            panic!("u cant delete an empty position")
+        }
         self.board[index as usize].contains = Piece::Empty;
+    }
+
+    pub fn king_piece(&mut self, index: u8) {
+        let piece = self.board[index as usize].contains;
+
+        if piece == Piece::Empty {
+            panic!("u cant king an empty piece")
+        }
+        // if index > 8 && index < 56 {panic!("u cant king a piece thats not at the edge of the board")}
+
+        self.board[index as usize].contains = match piece {
+            Piece::Blue => Piece::BlueKing,
+            Piece::Red => Piece::RedKing,
+            _ => {
+                panic!("this should not be possible")
+            }
+        };
     }
 }

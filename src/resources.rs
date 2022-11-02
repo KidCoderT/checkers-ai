@@ -15,9 +15,11 @@ pub async fn load_resources() -> Resources {
 
     let mut piece = load_texture("resources/red.png").await.unwrap();
     pieces.insert(Piece::Red, piece);
+    pieces.insert(Piece::RedKing, piece);
 
     let mut piece = load_texture("resources/blue.png").await.unwrap();
     pieces.insert(Piece::Blue, piece);
+    pieces.insert(Piece::BlueKing, piece);
 
     Resources {
         background,
