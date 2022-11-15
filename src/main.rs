@@ -1,14 +1,11 @@
 use macroquad::prelude::*;
 use resources::{load_resources, Resources};
-use std::ops::Deref;
 
 const BOARD_OFFSET: u32 = 30;
 const BOARD_SIZE: u32 = 640;
 const CELL_SIZE: u32 = (BOARD_SIZE / 8) as u32;
-const BOARD_BORDER_THICKNESS: i8 = 20;
 
-const NUM_SQUARES_TO_EDGE: [[i32; 4]; 64] = [[0; 4]; 64];
-const DIRECTIONAL_OFFSET: (i8, i8, i8, i8) = (7, 9, -7, -9);
+const PIECE_SCALE: f32 = 0.4f32;
 
 const WHITE_SQUARES: Color = Color::new(1.00, 1.00, 1.00, 1.00);
 const BLACK_SQUARES: Color = Color::new(0.09, 0.18, 0.21, 1.00);
@@ -21,7 +18,7 @@ pub mod utils;
 fn window_conf() -> Conf {
     Conf {
         window_title: "CheckersAI".to_owned(),
-        window_width: 1200 as i32,
+        window_width: 1200i32,
         window_height: (BOARD_SIZE + BOARD_OFFSET * 2) as i32,
         window_resizable: false,
         fullscreen: false,
@@ -86,12 +83,12 @@ fn draw_pieces(board: &[board::Position; 64], active_index: &Option<u8>, resourc
         None => 5000usize,
     };
 
-    for index in 0..64 {
+    for (index, position) in board.iter().enumerate() {
         if index == should_not_draw {
             continue;
         }
 
-        let piece = board[index].contains;
+        let piece = position.contains;
 
         let img = match piece {
             board::Piece::Empty => continue,
@@ -101,11 +98,15 @@ fn draw_pieces(board: &[board::Position; 64], active_index: &Option<u8>, resourc
         let x: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
         let y: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
 
-        if piece == board::Piece::BlueKing || piece == board::Piece::RedKing {
-            draw_scaled_img(*img, x, y + 3f32, 0.4, true);
-            draw_scaled_img(*img, x, y - 3f32, 0.4, true);
-        } else {
-            draw_scaled_img(*img, x, y, 0.4, true);
+        match piece {
+            board::Piece::Blue(true) | board::Piece::Red(true) => {
+                let offset = (16f32 * PIECE_SCALE) / 2f32;
+                draw_scaled_img(*img, x, y + offset, PIECE_SCALE, true);
+                draw_scaled_img(*img, x, y - offset, PIECE_SCALE, true);
+            }
+            _ => {
+                draw_scaled_img(*img, x, y, PIECE_SCALE, true);
+            }
         }
     }
 }
@@ -121,6 +122,20 @@ async fn main() {
         draw_texture(resources.background, 0f32, 0f32, WHITE);
 
         draw_board();
+
+        // if last_move.len() > 0usize {
+        //     let piece = manager.board[last_move.len() - 1].contains;
+
+        //     for index in last_move.iter() {
+        //         let x: f32 =
+        //             (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
+        //         let y: f32 =
+        //             (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
+        //     }
+        // }
+
+        // manager.
+
         draw_pieces(&manager.board, &active_index, &resources);
 
         let (mx, my) = mouse_position();
@@ -146,7 +161,7 @@ async fn main() {
                     board::Piece::Empty => {
                         panic!("theres an error!")
                     }
-                    _ => resources.pieces.get(&piece).unwrap(),
+                    _ => resources.pieces.get(piece).unwrap(),
                 };
 
                 draw_scaled_img(*img, mx, my, 0.4, true)
@@ -162,7 +177,7 @@ async fn main() {
                     if manager.board[index as usize].contains == board::Piece::Empty {
                         // manager.move_piece(drag_index, index); // todo: update this
                         // manager.delete_piece(drag_index); // todo: update this
-                        manager.king_piece(drag_index); // todo: update this
+                        // manager.king_piece(drag_index); // todo: update this
                     }
                 }
 

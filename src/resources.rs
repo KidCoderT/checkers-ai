@@ -11,15 +11,15 @@ pub struct Resources {
 pub async fn load_resources() -> Resources {
     let background = load_texture("resources/background.png").await.unwrap();
     let mut pieces = HashMap::new();
-    let mut banners = HashMap::new();
+    let banners = HashMap::new(); // todo: load the banners
 
-    let mut piece = load_texture("resources/red.png").await.unwrap();
-    pieces.insert(Piece::Red, piece);
-    pieces.insert(Piece::RedKing, piece);
+    let piece = load_texture("resources/red.png").await.unwrap();
+    pieces.insert(Piece::Red(false), piece);
+    pieces.insert(Piece::Red(true), piece);
 
-    let mut piece = load_texture("resources/blue.png").await.unwrap();
-    pieces.insert(Piece::Blue, piece);
-    pieces.insert(Piece::BlueKing, piece);
+    let piece = load_texture("resources/blue.png").await.unwrap();
+    pieces.insert(Piece::Blue(false), piece);
+    pieces.insert(Piece::Blue(true), piece);
 
     Resources {
         background,
