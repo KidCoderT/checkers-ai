@@ -8,18 +8,25 @@ pub struct Resources {
     pub banners: HashMap<Piece, Texture2D>,
 }
 
+impl Resources {
+    pub fn piece_img(&self, piece: &Piece) -> Texture2D {
+        self.pieces.get(&piece.base_form()).unwrap().to_owned()
+    }
+}
+
 pub async fn load_resources() -> Resources {
     let background = load_texture("resources/background.png").await.unwrap();
     let mut pieces = HashMap::new();
     let banners = HashMap::new(); // todo: load the banners
 
-    let piece = load_texture("resources/red.png").await.unwrap();
-    pieces.insert(Piece::Red(false), piece);
-    pieces.insert(Piece::Red(true), piece);
-
-    let piece = load_texture("resources/blue.png").await.unwrap();
-    pieces.insert(Piece::Blue(false), piece);
-    pieces.insert(Piece::Blue(true), piece);
+    pieces.insert(
+        Piece::Red(false),
+        load_texture("resources/red.png").await.unwrap(),
+    );
+    pieces.insert(
+        Piece::Blue(false),
+        load_texture("resources/blue.png").await.unwrap(),
+    );
 
     Resources {
         background,

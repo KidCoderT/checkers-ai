@@ -1,29 +1,18 @@
+mod move_;
+mod piece;
 
-#[derive(Copy, Clone, Hash, Eq, Debug, PartialEq)]
-pub enum Piece {
-    Blue(bool),
-    Red(bool),
-    Empty
-}
+pub use move_::Move;
+pub use piece::Piece;
 
 #[derive(Copy, Clone, Eq, Debug, PartialEq)]
 pub enum Player {
     Computer,
-    User
-}
-
-#[derive(Clone, Eq, Debug, PartialEq)]
-pub struct Move {
-    start: u8,
-    kills: Vec<(u8, Piece)>,
-    should_king: bool,
-    through: Vec<u8>,
-    end: u8,
+    User,
 }
 
 pub struct Manager {
     pub board: [Piece; 64],
-    pub players: [Player; 2], // blue, red
+    pub players: [Player; 2],      // blue, red
     made_moves: Vec<(Move, bool)>, // Move, Kill move present
     turn: usize,
 
@@ -36,9 +25,5 @@ pub struct Manager {
 
     moves_without_kill: u8,
 }
-
-impl Piece {}
-
-impl Move {}
 
 impl Manager {}

@@ -77,36 +77,33 @@ fn draw_scaled_img(img: Texture2D, x: f32, y: f32, scale: f32, should_center: bo
     )
 }
 
-fn draw_pieces(board: &[board::Position; 64], active_index: &Option<u8>, resources: &Resources) {
+fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<u8>, resources: &Resources) {
     let should_not_draw = match active_index {
         Some(index) => index.to_owned() as usize,
         None => 5000usize,
     };
 
-    for (index, position) in board.iter().enumerate() {
+    // todo: make more efficient
+
+    for (index, piece) in board.iter().enumerate() {
         if index == should_not_draw {
             continue;
         }
 
-        let piece = position.contains;
-
         let img = match piece {
             board::Piece::Empty => continue,
-            _ => resources.pieces.get(&piece).unwrap(),
+            _ => resources.piece_img(piece),
         };
 
         let x: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
         let y: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
 
-        match piece {
-            board::Piece::Blue(true) | board::Piece::Red(true) => {
-                let offset = (16f32 * PIECE_SCALE) / 2f32;
-                draw_scaled_img(*img, x, y + offset, PIECE_SCALE, true);
-                draw_scaled_img(*img, x, y - offset, PIECE_SCALE, true);
-            }
-            _ => {
-                draw_scaled_img(*img, x, y, PIECE_SCALE, true);
-            }
+        if piece.is_king().unwrap() {
+            let offset = (16f32 * PIECE_SCALE) / 2f32;
+            draw_scaled_img(img, x, y - offset, PIECE_SCALE, true);
+            draw_scaled_img(img, x, y + offset, PIECE_SCALE, true);
+        } else {
+            draw_scaled_img(img, x, y, PIECE_SCALE, true);
         }
     }
 }
@@ -114,7 +111,7 @@ fn draw_pieces(board: &[board::Position; 64], active_index: &Option<u8>, resourc
 #[macroquad::main(window_conf)]
 async fn main() {
     let resources = load_resources().await;
-    let mut manager = board::Manager::new();
+    // let mut manager = board::Manager::new();
     let mut active_index: Option<u8> = None;
 
     loop {
@@ -123,20 +120,9 @@ async fn main() {
 
         draw_board();
 
-        // if last_move.len() > 0usize {
-        //     let piece = manager.board[last_move.len() - 1].contains;
+        // todo: add indicator for the last move
 
-        //     for index in last_move.iter() {
-        //         let x: f32 =
-        //             (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
-        //         let y: f32 =
-        //             (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
-        //     }
-        // }
-
-        // manager.
-
-        draw_pieces(&manager.board, &active_index, &resources);
+        // draw_pieces(&manager.board, &active_index, &resources);
 
         let (mx, my) = mouse_position();
 
@@ -147,24 +133,24 @@ async fn main() {
             if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
                 let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
 
-                if manager.board[index as usize].contains != board::Piece::Empty {
-                    active_index = Some(index)
-                }
+                // if manager.board[index as usize].contains != board::Piece::Empty {
+                //     active_index = Some(index)
+                // }
             }
         }
 
         if let Some(drag_index) = active_index {
             if is_mouse_button_down(MouseButton::Left) {
-                let piece = &manager.board[drag_index as usize].contains;
+                // let piece = &manager.board[drag_index as usize].contains;
 
-                let img = match piece {
-                    board::Piece::Empty => {
-                        panic!("theres an error!")
-                    }
-                    _ => resources.pieces.get(piece).unwrap(),
-                };
+                // let img = match piece {
+                //     board::Piece::Empty => {
+                //         panic!("theres an error!")
+                //     }
+                //     _ => resources.piece_img(&piece),
+                // };
 
-                draw_scaled_img(*img, mx, my, 0.4, true)
+                // draw_scaled_img(img, mx, my, 0.4, true)
             }
 
             if is_mouse_button_released(MouseButton::Left) {
@@ -174,11 +160,9 @@ async fn main() {
                 if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
                     let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
 
-                    if manager.board[index as usize].contains == board::Piece::Empty {
-                        // manager.move_piece(drag_index, index); // todo: update this
-                        // manager.delete_piece(drag_index); // todo: update this
-                        // manager.king_piece(drag_index); // todo: update this
-                    }
+                    // if manager.board[index as usize].contains == board::Piece::Empty {
+                    //     // todo: move the piece to new position
+                    // }
                 }
 
                 active_index = None
