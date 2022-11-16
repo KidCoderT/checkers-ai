@@ -111,7 +111,7 @@ fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<u8>, resources:
 #[macroquad::main(window_conf)]
 async fn main() {
     let resources = load_resources().await;
-    // let mut manager = board::Manager::new();
+    let mut manager = board::Manager::new();
     let mut active_index: Option<u8> = None;
 
     loop {
@@ -122,7 +122,7 @@ async fn main() {
 
         // todo: add indicator for the last move
 
-        // draw_pieces(&manager.board, &active_index, &resources);
+        draw_pieces(&manager.board, &active_index, &resources);
 
         let (mx, my) = mouse_position();
 
@@ -133,24 +133,24 @@ async fn main() {
             if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
                 let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
 
-                // if manager.board[index as usize].contains != board::Piece::Empty {
-                //     active_index = Some(index)
-                // }
+                if !manager.board[index as usize].empty() {
+                    active_index = Some(index)
+                }
             }
         }
 
         if let Some(drag_index) = active_index {
             if is_mouse_button_down(MouseButton::Left) {
-                // let piece = &manager.board[drag_index as usize].contains;
+                let piece = &manager.board[drag_index as usize];
 
-                // let img = match piece {
-                //     board::Piece::Empty => {
-                //         panic!("theres an error!")
-                //     }
-                //     _ => resources.piece_img(&piece),
-                // };
+                let img = match piece {
+                    board::Piece::Empty => {
+                        panic!("theres an error!")
+                    }
+                    _ => resources.piece_img(piece),
+                };
 
-                // draw_scaled_img(img, mx, my, 0.4, true)
+                draw_scaled_img(img, mx, my, 0.4, true)
             }
 
             if is_mouse_button_released(MouseButton::Left) {
@@ -160,9 +160,9 @@ async fn main() {
                 if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
                     let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
 
-                    // if manager.board[index as usize].contains == board::Piece::Empty {
-                    //     // todo: move the piece to new position
-                    // }
+                    if manager.board[index as usize].empty() {
+                        // todo: move the piece to new position
+                    }
                 }
 
                 active_index = None

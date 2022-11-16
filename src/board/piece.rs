@@ -29,6 +29,10 @@ impl Piece {
             Piece::Empty => Piece::Empty,
         }
     }
+
+    pub fn empty(&self) -> bool {
+        matches!(self, Piece::Empty)
+    }
 }
 
 #[cfg(test)]
@@ -36,13 +40,13 @@ mod tests {
     use super::Piece;
 
     #[test]
-    fn base_form() {
+    fn check_get_base_form() {
         let test_case = vec![
             (Piece::Red(true), Piece::Red(false)),
             (Piece::Blue(true), Piece::Blue(false)),
             (Piece::Blue(false), Piece::Blue(false)),
             (Piece::Red(false), Piece::Red(false)),
-            (Piece::Empty, Piece::Empty)
+            (Piece::Empty, Piece::Empty),
         ];
 
         for (i, j) in test_case {
@@ -51,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn is_king() {
+    fn check_is_king() {
         let test_case = vec![
             (Piece::Red(true), Some(true)),
             (Piece::Blue(true), Some(true)),
@@ -66,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn blue_and_red() {
+    fn check_is_blue_red_or_empty() {
         let test_case = vec![
             (Piece::Red(true).is_red(), true),
             (Piece::Blue(false).is_red(), false),
@@ -74,6 +78,8 @@ mod tests {
             (Piece::Red(false).is_blue(), false),
             (Piece::Empty.is_blue(), false),
             (Piece::Empty.is_red(), false),
+            (Piece::Empty.empty(), true),
+            (Piece::Red(false).empty(), false),
         ];
 
         for (i, j) in test_case {
