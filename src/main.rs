@@ -1,9 +1,9 @@
 use macroquad::prelude::*;
 use resources::{load_resources, Resources};
 
-const BOARD_OFFSET: u32 = 30;
-const BOARD_SIZE: u32 = 640;
-const CELL_SIZE: u32 = (BOARD_SIZE / 8) as u32;
+const BOARD_OFFSET: f32 = 30f32;
+const BOARD_SIZE: f32 = 640f32;
+const CELL_SIZE: f32 = (BOARD_SIZE / 8f32) as f32;
 
 const PIECE_SCALE: f32 = 0.4f32;
 
@@ -19,7 +19,7 @@ fn window_conf() -> Conf {
     Conf {
         window_title: "CheckersAI".to_owned(),
         window_width: 1200i32,
-        window_height: (BOARD_SIZE + BOARD_OFFSET * 2) as i32,
+        window_height: (BOARD_SIZE + BOARD_OFFSET * 2f32) as i32,
         window_resizable: false,
         fullscreen: false,
         ..Default::default()
@@ -38,8 +38,8 @@ fn draw_board() {
                 }
             };
             draw_rectangle(
-                (BOARD_OFFSET + (file * CELL_SIZE)) as f32,
-                (BOARD_OFFSET + (rank * CELL_SIZE)) as f32,
+                BOARD_OFFSET + (file as f32 * CELL_SIZE),
+                BOARD_OFFSET + (rank as f32 * CELL_SIZE),
                 CELL_SIZE as f32,
                 CELL_SIZE as f32,
                 color,
@@ -77,9 +77,9 @@ fn draw_scaled_img(img: Texture2D, x: f32, y: f32, scale: f32, should_center: bo
     )
 }
 
-fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<u8>, resources: &Resources) {
+fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<usize>, resources: &Resources) {
     let should_not_draw = match active_index {
-        Some(index) => index.to_owned() as usize,
+        Some(index) => index.to_owned(),
         None => 5000usize,
     };
 
@@ -95,13 +95,13 @@ fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<u8>, resources:
             _ => resources.piece_img(piece),
         };
 
-        let x: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index % 8) as f32 + 0.5));
-        let y: f32 = (BOARD_OFFSET as f32) + ((CELL_SIZE as f32) * ((index / 8) as f32 + 0.5));
+        let x: f32 = BOARD_OFFSET + (CELL_SIZE * ((index % 8) as f32 + 0.5));
+        let y: f32 = BOARD_OFFSET + (CELL_SIZE * ((index / 8) as f32 + 0.5));
 
         if piece.is_king().unwrap() {
             let offset = (16f32 * PIECE_SCALE) / 2f32;
-            draw_scaled_img(img, x, y - offset, PIECE_SCALE, true);
             draw_scaled_img(img, x, y + offset, PIECE_SCALE, true);
+            draw_scaled_img(img, x, y - offset, PIECE_SCALE, true);
         } else {
             draw_scaled_img(img, x, y, PIECE_SCALE, true);
         }
@@ -112,7 +112,7 @@ fn draw_pieces(board: &[board::Piece; 64], active_index: &Option<u8>, resources:
 async fn main() {
     let resources = load_resources().await;
     let mut manager = board::Manager::new();
-    let mut active_index: Option<u8> = None;
+    let mut active_index: Option<usize> = None;
 
     loop {
         clear_background(Color::from_rgba(254, 241, 208, 255));
@@ -130,10 +130,10 @@ async fn main() {
             let x = mx - BOARD_OFFSET as f32;
             let y = my - BOARD_OFFSET as f32;
 
-            if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
-                let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
+            if x > 0f32 && x < BOARD_SIZE && y > 0f32 && y < BOARD_SIZE {
+                let index = (y / CELL_SIZE) as usize * 8 + (x / CELL_SIZE) as usize;
 
-                if !manager.board[index as usize].empty() {
+                if !manager.board[index].is_empty() {
                     active_index = Some(index)
                 }
             }
@@ -158,10 +158,16 @@ async fn main() {
                 let y = my - BOARD_OFFSET as f32;
 
                 if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
-                    let index = (y / CELL_SIZE as f32) as u8 * 8 + (x / CELL_SIZE as f32) as u8;
+                    let index = (y / CELL_SIZE) as usize * 8 + (x / CELL_SIZE as f32) as usize;
 
-                    if manager.board[index as usize].empty() {
-                        // todo: move the piece to new position
+                    if manager.board[index].is_empty() {
+                        manager.play_move(board::Move {
+                            start: drag_index,
+                            end: index,
+                            through: Vec::new(),
+                            kills: Vec::new(),
+                            should_king: true,
+                        });
                     }
                 }
 

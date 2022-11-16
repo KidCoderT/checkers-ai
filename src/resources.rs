@@ -10,7 +10,7 @@ pub struct Resources {
 
 impl Resources {
     pub fn piece_img(&self, piece: &Piece) -> Texture2D {
-        self.pieces.get(&piece.base_form()).unwrap().to_owned()
+        self.pieces.get(piece).unwrap().to_owned()
     }
 }
 
@@ -26,6 +26,14 @@ pub async fn load_resources() -> Resources {
     pieces.insert(
         Piece::Blue(false),
         load_texture("resources/blue.png").await.unwrap(),
+    );
+    pieces.insert(
+        Piece::Red(true),
+        load_texture("resources/red_king.png").await.unwrap(),
+    );
+    pieces.insert(
+        Piece::Blue(true),
+        load_texture("resources/blue_king.png").await.unwrap(),
     );
 
     Resources {

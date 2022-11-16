@@ -30,7 +30,15 @@ impl Piece {
         }
     }
 
-    pub fn empty(&self) -> bool {
+    pub fn king(&mut self) -> Piece {
+        match self {
+            Piece::Blue(_) => Piece::Blue(true),
+            Piece::Red(_) => Piece::Red(true),
+            Piece::Empty => Piece::Empty,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
         matches!(self, Piece::Empty)
     }
 }
@@ -78,8 +86,8 @@ mod tests {
             (Piece::Red(false).is_blue(), false),
             (Piece::Empty.is_blue(), false),
             (Piece::Empty.is_red(), false),
-            (Piece::Empty.empty(), true),
-            (Piece::Red(false).empty(), false),
+            (Piece::Empty.is_empty(), true),
+            (Piece::Red(false).is_empty(), false),
         ];
 
         for (i, j) in test_case {
