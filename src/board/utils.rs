@@ -1,16 +1,12 @@
-pub const DIRECTIONAL_OFFSET: (usize, usize) = (7, 9);
+pub const DIRECTIONAL_OFFSET: [i8; 2] = [7, 9];
 
 const fn calc_const_matrix() -> [[usize; 4]; 64] {
     let mut matrix = [[0usize; 4]; 64];
-
     let mut row = 0usize;
-
     while row < 8 {
         let mut column = 0;
-
         while column < 8 {
             let index = column * 8 + row;
-
             let dist_north = 7 - column;
             let dist_south = column;
             let dist_east = 7 - row;
@@ -38,13 +34,10 @@ const fn calc_const_matrix() -> [[usize; 4]; 64] {
                     dist_west
                 },
             ];
-
             column += 1;
         }
-
         row += 1
     }
-
     matrix
 }
 

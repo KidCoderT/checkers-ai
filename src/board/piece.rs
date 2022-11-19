@@ -1,3 +1,5 @@
+use std::mem;
+
 #[derive(Copy, Clone, Hash, Eq, Debug, PartialEq)]
 pub enum Piece {
     Blue(bool),
@@ -40,6 +42,19 @@ impl Piece {
 
     pub fn is_empty(&self) -> bool {
         matches!(self, Piece::Empty)
+    }
+
+    pub fn match_piece(&self, piece: &Piece) -> bool {
+        // true if the same false if different
+        mem::discriminant(piece) == mem::discriminant(self)
+    }
+
+    pub fn opposite(&self) -> Piece {
+        match self {
+            Piece::Blue(x) => Piece::Red(*x),
+            Piece::Red(x) => Piece::Blue(*x),
+            Piece::Empty => Piece::Empty,
+        }
     }
 }
 

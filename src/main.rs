@@ -125,6 +125,12 @@ async fn main() {
         draw_pieces(&manager.board, &active_index, &resources);
 
         let (mx, my) = mouse_position();
+        let inside_board: bool = {
+            let x = mx - BOARD_OFFSET as f32;
+            let y = my - BOARD_OFFSET as f32;
+
+            x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32
+        };
 
         if is_mouse_button_pressed(MouseButton::Left) {
             let x = mx - BOARD_OFFSET as f32;
@@ -157,7 +163,7 @@ async fn main() {
                 let x = mx - BOARD_OFFSET as f32;
                 let y = my - BOARD_OFFSET as f32;
 
-                if x > 0f32 && x < BOARD_SIZE as f32 && y > 0f32 && y < BOARD_SIZE as f32 {
+                if inside_board {
                     let index = (y / CELL_SIZE) as usize * 8 + (x / CELL_SIZE as f32) as usize;
 
                     if manager.board[index].is_empty() {
@@ -166,7 +172,7 @@ async fn main() {
                             end: index,
                             through: Vec::new(),
                             kills: Vec::new(),
-                            should_king: true,
+                            should_king: false,
                         });
                     }
                 }
