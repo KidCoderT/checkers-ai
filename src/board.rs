@@ -1,4 +1,5 @@
 use crate::utils::CollectArray;
+use std::thread;
 
 mod move_;
 mod piece;
@@ -8,12 +9,15 @@ pub use move_::Move;
 pub use piece::Piece;
 
 use self::move_::find_direction_offset;
+use crate::ai;
 
 #[derive(Copy, Clone, Eq, Debug, PartialEq)]
 pub enum Player {
     Computer,
     User,
 }
+
+#[derive(Clone)]
 pub struct Manager {
     pub board: [Piece; 64],
     pub players: [Player; 2], // blue, red
@@ -148,33 +152,6 @@ impl Manager {
         }
     }
 
-    fn update_state(&mut self) {
-        self.kill_move_present = false;
-        self.turn += 1;
-
-        for (piece, index) in self.get_pieces(self.current_side()) {
-            for offset_index in find_direction_offset(&piece) {
-                let move_offset: i8 = move_::move_offset(offset_index);
-
-                if utils::NUM_SQUARES_TO_EDGE[index][offset_index] >= 2 {
-                    let kill_index = (index as i8 + move_offset) as usize;
-                    let move_to_index = (kill_index as i8 + move_offset) as usize;
-
-                    if self.board[move_to_index].is_empty()
-                        && self.board[kill_index].match_piece(&piece.opposite())
-                    {
-                        self.kill_move_present = true;
-                        break;
-                    }
-                }
-            }
-
-            if self.kill_move_present {
-                break;
-            }
-        }
-    }
-
     fn sliding_moves(&self, index: usize) -> Vec<Move> {
         let piece = self.board[index];
         let mut sliding_moves: Vec<Move> = Vec::new();
@@ -191,8 +168,8 @@ impl Manager {
             }
 
             let should_king: bool = match piece {
-                Piece::Blue(false) => end > 56,
-                Piece::Red(false) => end < 8,
+                Piece::Blue(false) => end < 8,
+                Piece::Red(false) => end > 56,
                 _ => false,
             };
 
@@ -218,8 +195,8 @@ impl Manager {
                 let move_to_index = (kill_index as i8 + move_offset) as usize;
 
                 let should_king: bool = match piece {
-                    Piece::Blue(false) => move_to_index > 56,
-                    Piece::Red(false) => move_to_index < 8,
+                    Piece::Blue(false) => move_to_index < 8,
+                    Piece::Red(false) => move_to_index > 56,
                     _ => false,
                 };
 
@@ -248,8 +225,8 @@ impl Manager {
                     let move_to_index = (kill_index as i8 + move_offset) as usize;
 
                     let should_king: bool = match piece {
-                        Piece::Blue(false) => move_to_index > 56,
-                        Piece::Red(false) => move_to_index < 8,
+                        Piece::Blue(false) => move_to_index < 8,
+                        Piece::Red(false) => move_to_index > 56,
                         _ => false,
                     };
 
@@ -290,6 +267,43 @@ impl Manager {
 
         self.sliding_moves(index)
     }
+
+
+    fn make_ai_play(&mut self) {
+        let best_move = ai::find_best_move(self);
+        self.play_move(best_move);
+    }
+
+    fn update_state(&mut self) {
+        self.kill_move_present = false;
+        self.turn += 1;
+
+        for (piece, index) in self.get_pieces(self.current_side()) {
+            for offset_index in find_direction_offset(&piece) {
+                let move_offset: i8 = move_::move_offset(offset_index);
+
+                if utils::NUM_SQUARES_TO_EDGE[index][offset_index] >= 2 {
+                    let kill_index = (index as i8 + move_offset) as usize;
+                    let move_to_index = (kill_index as i8 + move_offset) as usize;
+
+                    if self.board[move_to_index].is_empty()
+                        && self.board[kill_index].match_piece(&piece.opposite())
+                    {
+                        self.kill_move_present = true;
+                        break;
+                    }
+                }
+            }
+
+            if self.kill_move_present {
+                break;
+            }
+        }
+
+        if self.players[self.turn % 2] == Player::Computer {
+            self.make_ai_play()
+        }
+    }
 }
 
 #[cfg(test)]
@@ -314,4 +328,6 @@ mod tests {
         let manager = Manager::new();
         assert_eq!(manager.piece_moves(42_usize).len(), 2);
     }
+
+    // todo: test ai
 }
