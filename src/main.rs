@@ -11,8 +11,7 @@ const WHITE_SQUARES: Color = Color::new(1.00, 1.00, 1.00, 1.00);
 const BLACK_SQUARES: Color = Color::new(0.09, 0.18, 0.21, 1.00);
 
 const END_COLOR: Color = Color::new(0.96, 0.81, 0.16, 1.00);
-// const KILL_COLOR: Color = Color::new(0.96, 0.16, 0.16, 1.00);
-// const THROUGH_COLOR: Color = Color::new(0.16, 0.96, 0.24, 1.00);
+const KILL_COLOR: Color = Color::new(0.96, 0.16, 0.16, 1.00);
 
 const CIRCLE_RADIUS: f32 = 10.00;
 
@@ -164,13 +163,24 @@ async fn main() {
                     _ => resources.piece_img(piece),
                 };
 
-                // draw possible move positions
-                // let kill_positions: Vec<usize> = Vec::new();
-                // let move_through_positions: Vec<usize> = Vec::new();
-
                 for index in active_moves.iter().map(|x| x.end) {
                     let x: f32 = BOARD_OFFSET + (CELL_SIZE * ((index % 8) as f32 + 0.5));
                     let y: f32 = BOARD_OFFSET + (CELL_SIZE * ((index / 8) as f32 + 0.5));
+
+                    draw_circle(x, y, CIRCLE_RADIUS, END_COLOR);
+                }
+
+                for (kill_index, _) in active_moves.iter().flat_map(|x| &x.kills) {
+                    let x: f32 = BOARD_OFFSET + (CELL_SIZE * ((kill_index % 8) as f32 + 0.5));
+                    let y: f32 = BOARD_OFFSET + (CELL_SIZE * ((kill_index / 8) as f32 + 0.5));
+
+                    draw_circle(x, y, CIRCLE_RADIUS, KILL_COLOR);
+                }
+
+
+                for through_index in active_moves.iter().flat_map(|x| &x.through) {
+                    let x: f32 = BOARD_OFFSET + (CELL_SIZE * ((through_index % 8) as f32 + 0.5));
+                    let y: f32 = BOARD_OFFSET + (CELL_SIZE * ((through_index / 8) as f32 + 0.5));
 
                     draw_circle(x, y, CIRCLE_RADIUS, END_COLOR);
                 }
