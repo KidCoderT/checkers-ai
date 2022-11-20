@@ -1,5 +1,4 @@
 use crate::utils::CollectArray;
-use itertools;
 
 mod move_;
 mod piece;
@@ -17,11 +16,11 @@ pub enum Player {
 }
 pub struct Manager {
     pub board: [Piece; 64],
-    pub players: [Player; 2],          // blue, red
-    
+    pub players: [Player; 2], // blue, red
+
     pub gameover: bool,
     pub winner: Piece,
-    
+
     made_moves: Vec<(Move, bool, u8)>, // Move, Kill move present, moves without kills
     kill_move_present: bool,
     moves_without_kill: u8,
@@ -67,7 +66,9 @@ impl Manager {
     pub fn get_pieces(&self, side: Piece) -> Vec<(Piece, usize)> {
         let mut pieces: Vec<(Piece, usize)> = Vec::new();
         for (index, piece) in self.board.iter().enumerate() {
-            if piece.is_empty() || !piece.match_piece(&side) {continue}
+            if piece.is_empty() || !piece.match_piece(&side) {
+                continue;
+            }
             pieces.push((piece.to_owned(), index));
         }
 
@@ -96,6 +97,7 @@ impl Manager {
     pub fn setup_pieces(&mut self) {
         self.setup_side(0, 3, Piece::Red(false));
         self.setup_side(5, 8, Piece::Blue(false));
+        // println!("{:?}", self.get_pieces(Piece::Blue(false)))
     }
 
     pub fn play_move(&mut self, selected_move: Move) {
@@ -145,17 +147,14 @@ impl Manager {
             self.board[*index] = piece.to_owned();
         }
     }
-    
+
     fn update_state(&mut self) {
-        self.kill_move_present = false; // todo: implement this check
+        self.kill_move_present = false;
         self.turn += 1;
 
         for (piece, index) in self.get_pieces(self.current_side()) {
             for offset_index in find_direction_offset(&piece) {
-                let move_offset: i8 = {
-                    let i = if offset_index / 2 == 1 {-1} else {1};
-                    utils::DIRECTIONAL_OFFSET[offset_index % 2] * i
-                };
+                let move_offset: i8 = move_::move_offset(offset_index);
 
                 if utils::NUM_SQUARES_TO_EDGE[index][offset_index] >= 2 {
                     let kill_index = (index as i8 + move_offset) as usize;
@@ -169,18 +168,133 @@ impl Manager {
                     }
                 }
             }
-            
-            if self.kill_move_present {break}
+
+            if self.kill_move_present {
+                break;
+            }
         }
+    }
+
+    fn sliding_moves(&self, index: usize) -> Vec<Move> {
+        let piece = self.board[index];
+        let mut sliding_moves: Vec<Move> = Vec::new();
+
+        for offset_index in move_::find_direction_offset(&piece) {
+            if utils::NUM_SQUARES_TO_EDGE[index][offset_index] == 0 {
+                continue;
+            }
+
+            let end: usize = (index as i8 + move_::move_offset(offset_index)) as usize;
+
+            if !self.board[end].is_empty() {
+                continue;
+            }
+
+            let should_king: bool = match piece {
+                Piece::Blue(false) => end > 56,
+                Piece::Red(false) => end < 8,
+                _ => false,
+            };
+
+            sliding_moves.push(Move::new_move(index, end, should_king, None))
+        }
+
+        sliding_moves
+    }
+
+    fn killing_move(&self, index: usize) -> Vec<Move> {
+        let piece = self.board[index];
+
+        let mut moves: Vec<Move> = Vec::new();
+        let directions = find_direction_offset(&piece);
+
+        let mut attack_moves: Vec<Move> = Vec::new();
+
+        for offset_index in directions.clone() {
+            let move_offset: i8 = move_::move_offset(offset_index);
+
+            if utils::NUM_SQUARES_TO_EDGE[index][offset_index] >= 2 {
+                let kill_index = (index as i8 + move_offset) as usize;
+                let move_to_index = (kill_index as i8 + move_offset) as usize;
+
+                let should_king: bool = match piece {
+                    Piece::Blue(false) => move_to_index > 56,
+                    Piece::Red(false) => move_to_index < 8,
+                    _ => false,
+                };
+
+                if self.board[move_to_index].is_empty()
+                    && self.board[kill_index].match_piece(&piece.opposite())
+                {
+                    attack_moves.push(Move::new_move(
+                        index,
+                        move_to_index,
+                        should_king,
+                        Some((kill_index, self.board[kill_index])),
+                    ));
+                }
+            }
+        }
+
+        while !attack_moves.is_empty() {
+            let attack = attack_moves.pop().unwrap();
+            let mut can_kill_more = false;
+
+            for offset_index in directions.clone() {
+                let move_offset: i8 = move_::move_offset(offset_index);
+
+                if utils::NUM_SQUARES_TO_EDGE[attack.end][offset_index] >= 2 {
+                    let kill_index = (attack.end as i8 + move_offset) as usize;
+                    let move_to_index = (kill_index as i8 + move_offset) as usize;
+
+                    let should_king: bool = match piece {
+                        Piece::Blue(false) => move_to_index > 56,
+                        Piece::Red(false) => move_to_index < 8,
+                        _ => false,
+                    };
+
+                    if self.board[move_to_index].is_empty()
+                        && self.board[kill_index].match_piece(&piece.opposite())
+                    {
+                        attack_moves.push(attack.extend(
+                            move_to_index,
+                            (kill_index, self.board[kill_index]),
+                            should_king,
+                        ));
+
+                        can_kill_more = true;
+                    }
+                }
+            }
+
+            if !can_kill_more {
+                moves.push(attack)
+            }
+        }
+
+        moves
+    }
+
+    pub fn piece_moves(&self, index: usize) -> Vec<Move> {
+        let piece = self.board[index];
+
+        // check if currently player turn
+        // check if piece is same as current turn
+        if self.players[self.turn % 2] != Player::User || !piece.match_piece(&self.current_side()) {
+            return Vec::new();
+        }
+
+        if self.kill_move_present {
+            return self.killing_move(index);
+        }
+
+        self.sliding_moves(index)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        Manager,
-        Piece
-    };
+    use super::{Manager, Piece};
 
     #[test]
     fn test_get_pieces() {
@@ -193,5 +307,11 @@ mod tests {
             assert!(!piece.is_empty());
             assert!(piece.is_red())
         }
+    }
+
+    #[test]
+    fn test_generate_sliding_moves() {
+        let manager = Manager::new();
+        assert_eq!(manager.piece_moves(42_usize).len(), 2);
     }
 }

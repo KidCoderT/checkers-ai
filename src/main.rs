@@ -10,6 +10,12 @@ const PIECE_SCALE: f32 = 0.4f32;
 const WHITE_SQUARES: Color = Color::new(1.00, 1.00, 1.00, 1.00);
 const BLACK_SQUARES: Color = Color::new(0.09, 0.18, 0.21, 1.00);
 
+const END_COLOR: Color = Color::new(0.96, 0.81, 0.16, 1.00);
+// const KILL_COLOR: Color = Color::new(0.96, 0.16, 0.16, 1.00);
+// const THROUGH_COLOR: Color = Color::new(0.16, 0.96, 0.24, 1.00);
+
+const CIRCLE_RADIUS: f32 = 10.00;
+
 mod ai;
 pub mod board;
 mod resources;
@@ -113,6 +119,7 @@ async fn main() {
     let resources = load_resources().await;
     let mut manager = board::Manager::new();
     let mut active_index: Option<usize> = None;
+    let mut active_moves: Vec<board::Move> = Vec::new();
 
     loop {
         clear_background(Color::from_rgba(254, 241, 208, 255));
@@ -140,7 +147,8 @@ async fn main() {
                 let index = (y / CELL_SIZE) as usize * 8 + (x / CELL_SIZE) as usize;
 
                 if !manager.board[index].is_empty() {
-                    active_index = Some(index)
+                    active_moves = manager.piece_moves(index);
+                    active_index = Some(index);
                 }
             }
         }
@@ -156,6 +164,17 @@ async fn main() {
                     _ => resources.piece_img(piece),
                 };
 
+                // draw possible move positions
+                // let kill_positions: Vec<usize> = Vec::new();
+                // let move_through_positions: Vec<usize> = Vec::new();
+
+                for index in active_moves.iter().map(|x| x.end) {
+                    let x: f32 = BOARD_OFFSET + (CELL_SIZE * ((index % 8) as f32 + 0.5));
+                    let y: f32 = BOARD_OFFSET + (CELL_SIZE * ((index / 8) as f32 + 0.5));
+
+                    draw_circle(x, y, CIRCLE_RADIUS, END_COLOR);
+                }
+
                 draw_scaled_img(img, mx, my, 0.4, true)
             }
 
@@ -166,18 +185,13 @@ async fn main() {
                 if inside_board {
                     let index = (y / CELL_SIZE) as usize * 8 + (x / CELL_SIZE as f32) as usize;
 
-                    if manager.board[index].is_empty() {
-                        manager.play_move(board::Move {
-                            start: drag_index,
-                            end: index,
-                            through: Vec::new(),
-                            kills: Vec::new(),
-                            should_king: false,
-                        });
+                    if let Some(move_index) = active_moves.iter().position(|x| x.end == index) {
+                        manager.play_move(active_moves[move_index].clone())
                     }
                 }
 
-                active_index = None
+                active_index = None;
+                active_moves.clear()
             }
         }
 
